@@ -10,7 +10,7 @@ class BulkSmsData
     public readonly array $messageParameters;
 
     /**
-     * @param  array<int, BulkMessageItem|array>  $messages
+     * @param  array<int|string, BulkMessageItem|array|string>  $messages
      */
     public function __construct(
         array $messages,
@@ -28,18 +28,51 @@ class BulkSmsData
         }
 
         $items = [];
-        foreach ($messages as $item) {
-            $items[] = is_array($item) ? BulkMessageItem::fromArray($item) : $item;
+        foreach ($messages as $key => $item) {
+            if ($item instanceof BulkMessageItem) {
+                $items[] = $item;
+            } elseif (is_array($item)) {
+                $items[] = BulkMessageItem::fromArray($item);
+            } elseif (is_string($key) && is_string($item)) {
+                // Key-value pair: ['9876543210' => 'Message text']
+                $items[] = new BulkMessageItem(number: $key, text: $item);
+            }
+        }
+
+        if (empty($items)) {
+            throw new InvalidArgumentException('No valid message items provided for bulk dispatch.');
         }
 
         $this->messageParameters = $items;
     }
 
-    public static function fromArray(array $data): self
+    public static function fromArray(array $data, ?string $defaultTemplateId = null): self
     {
+        // If data is a direct list of messages or phone => text map
+        $rawMessages = $data['messages'] ?? $data['messageParameters'] ?? $data['message_parameters'] ?? null;
+
+        if ($rawMessages === null) {
+            // Check if entire array is a phone => text map
+            $isAssocMap = true;
+            foreach (array_keys($data) as $k) {
+                if (in_array($k, ['templateId', 'template_id', 'senderId', 'sender_id', 'principleEntityId', 'peid', 'isUnicode', 'isFlash'])) {
+                    $isAssocMap = false;
+                    break;
+                }
+            }
+
+            if ($isAssocMap && ! empty($data)) {
+                $rawMessages = $data;
+            } else {
+                $rawMessages = [];
+            }
+        }
+
+        $templateId = $data['templateId'] ?? $data['template_id'] ?? $defaultTemplateId;
+
         return new self(
-            messages: $data['messages'] ?? $data['messageParameters'] ?? $data['message_parameters'] ?? [],
-            templateId: isset($data['templateId']) ? (string) $data['templateId'] : (isset($data['template_id']) ? (string) $data['template_id'] : null),
+            messages: is_array($rawMessages) ? $rawMessages : [],
+            templateId: $templateId !== null ? (string) $templateId : null,
             senderId: $data['senderId'] ?? $data['sender_id'] ?? null,
             principleEntityId: $data['principleEntityId'] ?? $data['principle_entity_id'] ?? $data['peid'] ?? null,
             scheduleDateTime: $data['scheduleDateTime'] ?? $data['schedule_date_time'] ?? null,

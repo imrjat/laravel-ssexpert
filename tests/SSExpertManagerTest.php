@@ -31,6 +31,10 @@ class SSExpertManagerTest extends TestCase
                 'ErrorCode' => 0,
                 'Data' => 'msg_123',
             ], 200),
+            'http://api.ssexpertsystem.com/api/v2/SendBulkSMS' => Http::response([
+                'ErrorCode' => 0,
+                'Data' => 'bulk_accepted',
+            ], 200),
             'http://api.ssexpertsystem.com/api/v2/Balance*' => Http::response([
                 'ErrorCode' => 0,
                 'Data' => [
@@ -41,6 +45,13 @@ class SSExpertManagerTest extends TestCase
 
         $res = SSExpert::sendOtp('9876543210', '999111');
         $this->assertTrue($res->isSuccess());
+
+        // Test bulk shortcut with pure key-value array
+        $bulkRes = SSExpert::sendBulk([
+            '9876543210' => 'Hello User 1',
+            '9123456780' => 'Hello User 2',
+        ], '1107160000000000001');
+        $this->assertTrue($bulkRes->isSuccess());
 
         $credits = SSExpert::getCredits();
         $this->assertEquals(1500.0, $credits);

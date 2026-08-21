@@ -57,6 +57,14 @@ $response = SSExpert::sms()->send($sms);
 ### 3. Send Bulk SMS Campaigns
 ```php
 use Imrjat\SSExpert\Facades\SSExpert;
+
+// A. Pure Array (No DTOs)
+$response = SSExpert::sendBulk([
+    '9876543210' => 'Hello User 1, your OTP is 112233.',
+    '9123456780' => 'Hello User 2, your OTP is 445566.',
+], templateId: '1107160000000000001');
+
+// B. Or with Strongly Typed DTO
 use Imrjat\SSExpert\DTOs\BulkSmsData;
 use Imrjat\SSExpert\DTOs\BulkMessageItem;
 

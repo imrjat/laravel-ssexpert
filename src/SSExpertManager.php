@@ -7,6 +7,7 @@ use Imrjat\SSExpert\Contracts\GroupServiceInterface;
 use Imrjat\SSExpert\Contracts\SenderIdServiceInterface;
 use Imrjat\SSExpert\Contracts\SmsServiceInterface;
 use Imrjat\SSExpert\Contracts\TemplateServiceInterface;
+use Imrjat\SSExpert\DTOs\BulkSmsData;
 use Imrjat\SSExpert\DTOs\SmsApiResponse;
 use Imrjat\SSExpert\DTOs\SmsData;
 
@@ -93,11 +94,23 @@ class SSExpertManager
     }
 
     /**
-     * Quick shortcut: Send a custom SMS.
+     * Quick shortcut: Send a single custom SMS.
      */
     public function send(SmsData|array $smsData): SmsApiResponse
     {
         return $this->smsService->send($smsData);
+    }
+
+    /**
+     * Quick shortcut: Send bulk SMS messages.
+     */
+    public function sendBulk(BulkSmsData|array $bulkData, ?string $templateId = null): SmsApiResponse
+    {
+        if (is_array($bulkData)) {
+            $bulkData = BulkSmsData::fromArray($bulkData, $templateId);
+        }
+
+        return $this->smsService->sendBulk($bulkData);
     }
 
     /**

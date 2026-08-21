@@ -8,6 +8,7 @@ use Imrjat\SSExpert\Contracts\GroupServiceInterface;
 use Imrjat\SSExpert\Contracts\SenderIdServiceInterface;
 use Imrjat\SSExpert\Contracts\SmsServiceInterface;
 use Imrjat\SSExpert\Contracts\TemplateServiceInterface;
+use Imrjat\SSExpert\DTOs\BulkSmsData;
 use Imrjat\SSExpert\DTOs\SmsApiResponse;
 use Imrjat\SSExpert\DTOs\SmsData;
 
@@ -24,6 +25,7 @@ use Imrjat\SSExpert\DTOs\SmsData;
  * @method static GroupServiceInterface groups()
  * @method static SmsApiResponse sendOtp(string $mobile, string $otp, ?string $templateId = null)
  * @method static SmsApiResponse send(SmsData|array $smsData)
+ * @method static SmsApiResponse sendBulk(BulkSmsData|array $bulkData, ?string $templateId = null)
  * @method static float getCredits()
  *
  * @see \Imrjat\SSExpert\SSExpertManager
