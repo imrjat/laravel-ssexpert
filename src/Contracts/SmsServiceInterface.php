@@ -2,18 +2,44 @@
 
 namespace Imrjat\SSExpert\Contracts;
 
+use Imrjat\SSExpert\DTOs\BulkSmsData;
 use Imrjat\SSExpert\DTOs\SmsApiResponse;
 use Imrjat\SSExpert\DTOs\SmsData;
 
 interface SmsServiceInterface
 {
     /**
-     * Send single SMS message.
+     * Send a single SMS message.
      */
     public function send(SmsData|array $smsData): SmsApiResponse;
 
     /**
-     * Helper to send OTP SMS with a registered template.
+     * Helper to send an OTP SMS with an approved template.
      */
-    public function sendOtp(string $mobile, string $otp, string $templateId = '1707167402281919826'): SmsApiResponse;
+    public function sendOtp(string $mobile, string $otp, ?string $templateId = null): SmsApiResponse;
+
+    /**
+     * Send bulk personalized SMS messages in a single API call.
+     */
+    public function sendBulk(BulkSmsData|array $bulkData): SmsApiResponse;
+
+    /**
+     * Query delivery status for a specific message by its Gateway Message ID.
+     */
+    public function getMessageStatus(string $messageId): array;
+
+    /**
+     * Query SMS delivery status logs for recent days.
+     */
+    public function getDeliveryReport(int $days = 7): array;
+
+    /**
+     * Retrieve detailed SMS transmission logs with pagination and date filter.
+     */
+    public function getSmsLogs(int $start = 0, int $length = 50, ?string $fromDate = null, ?string $endDate = null): array;
+
+    /**
+     * Retrieve summary statistics report by date range.
+     */
+    public function getReportSummary(?string $fromDate = null, ?string $endDate = null): array;
 }

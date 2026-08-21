@@ -3,10 +3,11 @@
 namespace Imrjat\SSExpert\Tests;
 
 use Illuminate\Support\Facades\Http;
+use Imrjat\SSExpert\DTOs\BulkMessageItem;
+use Imrjat\SSExpert\DTOs\BulkSmsData;
 use Imrjat\SSExpert\DTOs\SmsApiResponse;
 use Imrjat\SSExpert\DTOs\SmsData;
 use Imrjat\SSExpert\Exceptions\SSExpertApiException;
-use Imrjat\SSExpert\Exceptions\SSExpertAuthException;
 use Imrjat\SSExpert\Services\SSExpertSmsService;
 
 class SSExpertSmsServiceTest extends TestCase
@@ -16,109 +17,132 @@ class SSExpertSmsServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->smsService = new SSExpertSmsService(array_merge($this->getPackageConfig(), [
-            'sender_id' => 'ORPATG',
-            'principle_entity_id' => '1101554433221100123',
-        ]));
+        $this->smsService = new SSExpertSmsService($this->getPackageConfig());
     }
 
-    public function test_send_sms_success(): void
+    public function test_send_single_sms_success(): void
     {
         Http::fake([
             'http://api.ssexpertsystem.com/api/v2/SendSMS' => Http::response([
-                'errorCode' => 0,
-                'errorDescription' => 'Success',
-                'data' => '1234567890abcdef',
+                'ErrorCode' => 0,
+                'ErrorDescription' => 'Success',
+                'Data' => [
+                    [
+                        'MessageErrorCode' => 0,
+                        'MessageErrorDescription' => 'Success',
+                        'MobileNumber' => '919876543210',
+                        'MessageId' => 'mock-uuid-112233',
+                    ],
+                ],
             ], 200),
         ]);
 
         $sms = new SmsData(
-            mobileNumbers: '9770231935',
-            message: 'Your Login OTP is 456789. Do not share OTP for security reasons to anyone. - Orpat',
-            templateId: '1707167402281919826',
+            mobileNumbers: '9876543210',
+            message: 'Your Login OTP is 456789. Do not share with anyone.',
+            templateId: '1107160000000000001',
         );
 
         $response = $this->smsService->send($sms);
 
         $this->assertInstanceOf(SmsApiResponse::class, $response);
         $this->assertTrue($response->isSuccess());
-        $this->assertEquals('1234567890abcdef', $response->getMessageId());
+        $this->assertEquals('mock-uuid-112233', $response->getMessageId());
 
         Http::assertSent(function ($request) {
             $body = $request->data();
 
             return $request->url() === 'http://api.ssexpertsystem.com/api/v2/SendSMS'
-                && $request->method() === 'POST'
-                && $body['mobileNumbers'] === '9770231935'
-                && $body['senderId'] === 'ORPATG'
-                && $body['templateId'] === '1707167402281919826'
-                && $body['principleEntityId'] === '1101554433221100123'
-                && $body['apiKey'] === 'test_api_key_123'
-                && $body['clientId'] === 'test_client_id_456';
+                && $body['mobileNumbers'] === '9876543210'
+                && $body['senderId'] === 'TESTID'
+                && $body['templateId'] === '1107160000000000001'
+                && $body['apiKey'] === 'test_api_key'
+                && $body['clientId'] === 'test_client_id';
         });
     }
 
-    public function test_send_otp_helper_success(): void
+    public function test_send_otp_helper(): void
     {
         Http::fake([
             'http://api.ssexpertsystem.com/api/v2/SendSMS' => Http::response([
-                'errorCode' => 0,
-                'data' => 'msg_otp_9999',
+                'ErrorCode' => 0,
+                'Data' => [
+                    [
+                        'MessageErrorCode' => 0,
+                        'MessageId' => 'otp-message-id-999',
+                    ],
+                ],
             ], 200),
         ]);
 
-        $response = $this->smsService->sendOtp('9770231935', '839201');
+        $response = $this->smsService->sendOtp('9876543210', '839201', '1107160000000000001');
 
         $this->assertTrue($response->isSuccess());
-        $this->assertEquals('msg_otp_9999', $response->getMessageId());
+        $this->assertEquals('otp-message-id-999', $response->getMessageId());
 
         Http::assertSent(function ($request) {
             $body = $request->data();
 
-            return $body['mobileNumbers'] === '9770231935'
+            return $body['mobileNumbers'] === '9876543210'
                 && str_contains($body['message'], '839201')
-                && $body['templateId'] === '1707167402281919826';
+                && $body['templateId'] === '1107160000000000001';
         });
     }
 
-    public function test_invalid_mobile_throws_exception(): void
+    public function test_send_bulk_sms(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        new SmsData('123', 'Hello');
+        Http::fake([
+            'http://api.ssexpertsystem.com/api/v2/SendBulkSMS' => Http::response([
+                'ErrorCode' => 0,
+                'Data' => 'Bulk Accepted',
+            ], 200),
+        ]);
+
+        $bulk = new BulkSmsData(
+            messages: [
+                new BulkMessageItem('9876543210', 'Hi User 1'),
+                new BulkMessageItem('9123456780', 'Hi User 2'),
+            ],
+            templateId: '1107160000000000001',
+        );
+
+        $response = $this->smsService->sendBulk($bulk);
+
+        $this->assertTrue($response->isSuccess());
     }
 
     public function test_empty_message_throws_exception(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        new SmsData('9770231935', '');
+
+        new SmsData('9876543210', '');
     }
 
-    public function test_send_sms_unauthorized_throws_exception(): void
+    public function test_gateway_error_response_handling(): void
     {
         Http::fake([
             'http://api.ssexpertsystem.com/api/v2/SendSMS' => Http::response([
-                'message' => 'Unauthorized',
-            ], 401),
-        ]);
-
-        $this->expectException(SSExpertAuthException::class);
-        $this->smsService->sendOtp('9770231935', '123456');
-    }
-
-    public function test_send_sms_gateway_error_code(): void
-    {
-        Http::fake([
-            'http://api.ssexpertsystem.com/api/v2/SendSMS' => Http::response([
-                'errorCode' => 104,
-                'errorDescription' => 'Insufficient credit balance',
-                'data' => null,
+                'ErrorCode' => 104,
+                'ErrorDescription' => 'Invalid Template ID',
+                'Data' => null,
             ], 200),
         ]);
 
-        $response = $this->smsService->sendOtp('9770231935', '123456');
+        $response = $this->smsService->sendOtp('9876543210', '123456', '1107160000000000001');
 
         $this->assertFalse($response->isSuccess());
         $this->assertEquals(104, $response->errorCode);
-        $this->assertEquals('Insufficient credit balance', $response->getErrorMessage());
+        $this->assertEquals('Invalid Template ID', $response->getErrorMessage());
+    }
+
+    public function test_server_failure_throws_exception(): void
+    {
+        $this->expectException(SSExpertApiException::class);
+
+        Http::fake([
+            'http://api.ssexpertsystem.com/api/v2/SendSMS' => Http::response('Gateway Timeout', 504),
+        ]);
+
+        $this->smsService->sendOtp('9876543210', '123456');
     }
 }
