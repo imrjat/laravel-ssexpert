@@ -106,7 +106,7 @@ class SSExpertTemplateService implements TemplateServiceInterface
             $data = $this->handleResponse($response, 'list');
 
             $templates = collect();
-            $items = $data['data'] ?? [];
+            $items = $data['Data'] ?? $data['data'] ?? [];
 
             if (is_array($items)) {
                 foreach ($items as $item) {

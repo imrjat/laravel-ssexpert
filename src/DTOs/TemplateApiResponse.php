@@ -31,14 +31,14 @@ class TemplateApiResponse implements JsonSerializable, ArrayAccess
     }
 
     /**
-     * Static factory from API array response.
+     * Static factory supporting both PascalCase and camelCase.
      */
     public static function fromArray(array $response): self
     {
         return new self(
-            errorCode: (int) ($response['errorCode'] ?? 0),
-            errorDescription: $response['errorDescription'] ?? null,
-            data: $response['data'] ?? null,
+            errorCode: (int) ($response['errorCode'] ?? $response['ErrorCode'] ?? $response['error_code'] ?? 0),
+            errorDescription: $response['errorDescription'] ?? $response['ErrorDescription'] ?? $response['error_description'] ?? $response['message'] ?? null,
+            data: $response['data'] ?? $response['Data'] ?? null,
             raw: $response,
         );
     }

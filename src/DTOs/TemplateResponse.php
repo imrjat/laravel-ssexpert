@@ -23,23 +23,23 @@ class TemplateResponse implements JsonSerializable, ArrayAccess
     ) {}
 
     /**
-     * Factory method from raw API response array.
+     * Factory method supporting PascalCase, camelCase, and snake_case API responses.
      */
     public static function fromArray(array $data): self
     {
         return new self(
-            templateId: (int) ($data['templateId'] ?? $data['id'] ?? 0),
-            companyId: (int) ($data['companyId'] ?? 0),
-            templateName: (string) ($data['templateName'] ?? ''),
-            messageTemplate: (string) ($data['messageTemplate'] ?? ''),
-            isApproved: (bool) ($data['isApproved'] ?? false),
-            isActive: (bool) ($data['isActive'] ?? false),
-            productName: $data['productName'] ?? null,
-            createDate: $data['createDate'] ?? null,
-            createDateString: $data['createDateString'] ?? null,
-            approvedDate: $data['approvedDate'] ?? null,
-            approvedDateString: $data['approvedDateString'] ?? null,
-            dltTemplateId: isset($data['dltTemplateId']) ? (string) $data['dltTemplateId'] : null,
+            templateId: (int) ($data['TemplateId'] ?? $data['templateId'] ?? $data['template_id'] ?? $data['id'] ?? 0),
+            companyId: (int) ($data['CompanyId'] ?? $data['companyId'] ?? $data['company_id'] ?? 0),
+            templateName: (string) ($data['TemplateName'] ?? $data['templateName'] ?? $data['template_name'] ?? $data['name'] ?? ''),
+            messageTemplate: (string) ($data['MessageTemplate'] ?? $data['messageTemplate'] ?? $data['message_template'] ?? $data['message'] ?? ''),
+            isApproved: (bool) ($data['IsApproved'] ?? $data['isApproved'] ?? $data['is_approved'] ?? false),
+            isActive: (bool) ($data['IsActive'] ?? $data['isActive'] ?? $data['is_active'] ?? false),
+            productName: $data['ProductName'] ?? $data['productName'] ?? $data['product_name'] ?? null,
+            createDate: $data['CreateDate'] ?? $data['CreatededDate'] ?? $data['createDate'] ?? $data['create_date'] ?? null,
+            createDateString: $data['CreateDateString'] ?? $data['CreatededDate'] ?? $data['createDateString'] ?? $data['create_date_string'] ?? null,
+            approvedDate: $data['ApprovedDate'] ?? $data['approvedDate'] ?? $data['approved_date'] ?? null,
+            approvedDateString: $data['ApprovedDateString'] ?? $data['ApprovedDate'] ?? $data['approvedDateString'] ?? $data['approved_date_string'] ?? null,
+            dltTemplateId: isset($data['DltTemplateId']) ? (string) $data['DltTemplateId'] : (isset($data['dltTemplateId']) ? (string) $data['dltTemplateId'] : (isset($data['dlt_template_id']) ? (string) $data['dlt_template_id'] : null)),
         );
     }
 
@@ -79,13 +79,7 @@ class TemplateResponse implements JsonSerializable, ArrayAccess
         return $this->toArray()[$offset] ?? null;
     }
 
-    public function offsetSet(mixed $offset, mixed $value): void
-    {
-        // Immutable DTO
-    }
+    public function offsetSet(mixed $offset, mixed $value): void {}
 
-    public function offsetUnset(mixed $offset): void
-    {
-        // Immutable DTO
-    }
+    public function offsetUnset(mixed $offset): void {}
 }
