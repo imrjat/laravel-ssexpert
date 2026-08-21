@@ -559,4 +559,4 @@ public function test_user_receives_otp()
 
 The MIT License (MIT). Please see [LICENSE](LICENSE) for more details.
 
-**Author**: [Imran Jat](https://github.com/imrjat)
+**Author**: [Rahul Jat](https://github.com/imrjat)

@@ -6,7 +6,7 @@
 - Package Name: `imrjat/laravel-ssexpert`
 - Packagist URL: https://packagist.org/packages/imrjat/laravel-ssexpert
 - GitHub URL: https://github.com/imrjat/laravel-ssexpert
-- Author: Imran Jat (https://github.com/imrjat)
+- Author: Rahul Jat (https://github.com/imrjat)
 - PHP Compatibility: PHP >= 8.2
 - Laravel Compatibility: Laravel 10.x, 11.x, 12.x, 13.x
 
