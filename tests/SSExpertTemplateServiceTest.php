@@ -115,7 +115,7 @@ class SSExpertTemplateServiceTest extends TestCase
 
             return $request->url() === 'http://api.ssexpertsystem.com/api/v2/Template'
                 && $data['templateName'] === 'PAYMENT_ALERT'
-                && $data['dltTemplateId'] === '1107160000000000003'
+                && $data['templateId'] === '1107160000000000003'
                 && $data['apiKey'] === 'test_api_key'
                 && $data['clientId'] === 'test_client_id';
         });

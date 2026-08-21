@@ -33,9 +33,8 @@ class BulkSmsData
                 $items[] = $item;
             } elseif (is_array($item)) {
                 $items[] = BulkMessageItem::fromArray($item);
-            } elseif (is_string($key) && is_string($item)) {
-                // Key-value pair: ['9876543210' => 'Message text']
-                $items[] = new BulkMessageItem(number: $key, text: $item);
+            } elseif (is_string($item)) {
+                $items[] = new BulkMessageItem(number: (string) $key, text: $item);
             }
         }
 
@@ -48,11 +47,9 @@ class BulkSmsData
 
     public static function fromArray(array $data, ?string $defaultTemplateId = null): self
     {
-        // If data is a direct list of messages or phone => text map
         $rawMessages = $data['messages'] ?? $data['messageParameters'] ?? $data['message_parameters'] ?? null;
 
         if ($rawMessages === null) {
-            // Check if entire array is a phone => text map
             $isAssocMap = true;
             foreach (array_keys($data) as $k) {
                 if (in_array($k, ['templateId', 'template_id', 'senderId', 'sender_id', 'principleEntityId', 'peid', 'isUnicode', 'isFlash'])) {

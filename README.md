@@ -1,6 +1,6 @@
 # Laravel SSExpert
 
-
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/imrjat/laravel-ssexpert.svg?style=flat-square)](https://packagist.org/packages/imrjat/laravel-ssexpert)
 [![Total Downloads](https://img.shields.io/packagist/dt/imrjat/laravel-ssexpert.svg?style=flat-square)](https://packagist.org/packages/imrjat/laravel-ssexpert)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 [![PHP Version](https://img.shields.io/badge/PHP-%5E8.2-777bb4.svg?style=flat-square)](https://www.php.net/)
@@ -152,7 +152,23 @@ All services are accessible through the single **`SSExpert`** facade.
 > **TRAI DLT Entity ID (`principleEntityId`)**:
 > Telecom operators require a registered **Principal Entity ID (PEID)** for DLT compliance. Once `SSEXPERT_PEID` is set in `.env`, `SSExpert` **automatically attaches** your PEID to every outgoing SMS. You can also override it per request.
 
-#### A. Quick OTP Sending (Shortcut)
+#### Recommended: Using Strongly Typed DTOs
+```php
+use Imrjat\SSExpert\Facades\SSExpert;
+use Imrjat\SSExpert\DTOs\SmsData;
+
+$sms = new SmsData(
+    mobileNumbers: '9876543210',
+    message: 'Dear Customer, your request ID 98765 is confirmed.',
+    templateId: '1107160000000000002',              // DLT Content Template ID
+    principleEntityId: '1101554433000000000',       // DLT Principal Entity ID (Optional override)
+    senderId: 'TESTID'                              // Sender ID / Header (Optional override)
+);
+
+$response = SSExpert::sms()->send($sms);
+```
+
+#### Quick OTP Shortcut
 ```php
 use Imrjat\SSExpert\Facades\SSExpert;
 
@@ -170,23 +186,7 @@ if ($response->isSuccess()) {
 }
 ```
 
-#### B. Custom SMS with DTO & Per-Message Overrides
-```php
-use Imrjat\SSExpert\Facades\SSExpert;
-use Imrjat\SSExpert\DTOs\SmsData;
-
-$sms = new SmsData(
-    mobileNumbers: '9876543210',
-    message: 'Dear Customer, your request ID 98765 is confirmed.',
-    templateId: '1107160000000000002',              // DLT Content Template ID
-    principleEntityId: '1101554433000000000',       // DLT Principal Entity ID (Optional override)
-    senderId: 'TESTID'                              // Sender ID / Header (Optional override)
-);
-
-$response = SSExpert::sms()->send($sms);
-```
-
-#### C. Handling the Response
+#### Handling the Gateway Response
 ```php
 $response = SSExpert::sendOtp('9876543210', '123456');
 
@@ -208,37 +208,9 @@ $raw = $response->raw;
 
 ### 2. Sending Bulk SMS Campaigns
 
-Send customized, personalized messages to multiple recipients in a single HTTP payload. You can use **pure PHP arrays (no DTOs needed)** or strongly typed DTOs:
+Send customized, personalized messages to multiple recipients in a single HTTP request:
 
-#### Option A: Clean Key-Value Map (No DTOs Required)
-```php
-use Imrjat\SSExpert\Facades\SSExpert;
-
-// Pass a simple [Mobile => Message] array
-$response = SSExpert::sendBulk([
-    '9876543210' => 'Dear User 1, your OTP is 112233.',
-    '9123456780' => 'Dear User 2, your OTP is 445566.',
-], templateId: '1107160000000000001');
-
-if ($response->isSuccess()) {
-    echo "Bulk campaign accepted!";
-}
-```
-
-#### Option B: Associative Array (No DTOs Required)
-```php
-use Imrjat\SSExpert\Facades\SSExpert;
-
-$response = SSExpert::sms()->sendBulk([
-    'template_id' => '1107160000000000001',
-    'messages' => [
-        ['number' => '9876543210', 'text' => 'Dear User 1, your OTP is 112233.'],
-        ['number' => '9123456780', 'text' => 'Dear User 2, your OTP is 445566.'],
-    ],
-]);
-```
-
-#### Option C: Strongly Typed DTO
+#### Recommended: Using Strongly Typed DTOs
 ```php
 use Imrjat\SSExpert\Facades\SSExpert;
 use Imrjat\SSExpert\DTOs\BulkSmsData;
@@ -255,6 +227,30 @@ $bulkData = new BulkSmsData(
 );
 
 $response = SSExpert::sms()->sendBulk($bulkData);
+
+if ($response->isSuccess()) {
+    echo "Bulk campaign accepted!";
+}
+```
+
+#### Alternative: Using Array Payloads
+```php
+use Imrjat\SSExpert\Facades\SSExpert;
+
+// 1. Associative payload array
+$response = SSExpert::sms()->sendBulk([
+    'template_id' => '1107160000000000001',
+    'messages' => [
+        ['number' => '9876543210', 'text' => 'Dear User 1, your OTP is 112233.'],
+        ['number' => '9123456780', 'text' => 'Dear User 2, your OTP is 445566.'],
+    ],
+]);
+
+// 2. Direct key-value map shortcut
+$response = SSExpert::sendBulk([
+    '9876543210' => 'Dear User 1, your OTP is 112233.',
+    '9123456780' => 'Dear User 2, your OTP is 445566.',
+], templateId: '1107160000000000001');
 ```
 
 ---
@@ -281,8 +277,9 @@ $records = SSExpert::balance()->list();
 
 ### 4. DLT Template Management
 
-Programmatically list, query, create, and delete DLT templates registered with your telecom gateway:
+Programmatically list, query, create, update, and delete DLT templates registered with your telecom gateway:
 
+#### Recommended: Using Strongly Typed DTOs
 ```php
 use Imrjat\SSExpert\Facades\SSExpert;
 use Imrjat\SSExpert\DTOs\TemplateData;
@@ -290,20 +287,13 @@ use Imrjat\SSExpert\DTOs\TemplateData;
 // 1. List all templates (returns Collection<int, TemplateResponse>)
 $templates = SSExpert::template()->list();
 
-foreach ($templates as $template) {
-    echo "ID: " . $template->templateId;
-    echo "Name: " . $template->templateName;
-    echo "DLT ID: " . $template->dltTemplateId;
-    echo "Status: " . ($template->isApproved ? 'Approved' : 'Pending');
-}
-
 // 2. Find template by DLT Template ID
 $template = SSExpert::template()->findByDltTemplateId('1107160000000000001');
 
 // 3. Find template by name
 $template = SSExpert::template()->findByName('OTP_SECURITY');
 
-// 4. Create a new template
+// 4. Create a new template with DTO
 $response = SSExpert::template()->create(new TemplateData(
     templateName: 'PAYMENT_RECEIVED',
     messageTemplate: 'Dear {#var#}, payment of INR {#var#} received.',
@@ -319,6 +309,17 @@ SSExpert::template()->update(101, new TemplateData(
 
 // 6. Delete a template by ID
 SSExpert::template()->delete(101);
+```
+
+#### Alternative: Using Array Payloads
+```php
+use Imrjat\SSExpert\Facades\SSExpert;
+
+$response = SSExpert::template()->create([
+    'name' => 'PAYMENT_RECEIVED',
+    'template' => 'Dear {#var#}, payment of INR {#var#} received.',
+    'dlt_template_id' => '1107160000000000003',
+]);
 ```
 
 ---
@@ -550,12 +551,6 @@ public function test_user_receives_otp()
             && $request['mobileNumbers'] === '9876543210';
     });
 }
-```
-
-To run the package test suite:
-
-```bash
-./vendor/bin/phpunit packages/laravel-ssexpert/tests
 ```
 
 ---
