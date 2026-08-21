@@ -1,0 +1,53 @@
+{
+  "name": "imrjat/laravel-ssexpert",
+  "description": "Laravel client package for SSExpertSystem SMS & Template Gateway API",
+  "keywords": [
+    "imrjat",
+    "laravel",
+    "ssexpert",
+    "ssexpertsystem",
+    "sms",
+    "templates",
+    "dlt"
+  ],
+  "homepage": "https://github.com/imrjat/laravel-ssexpert",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Imran Jat",
+      "homepage": "https://github.com/imrjat"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "guzzlehttp/guzzle": "^7.8",
+    "illuminate/http": "^10.0|^11.0|^12.0",
+    "illuminate/support": "^10.0|^11.0|^12.0"
+  },
+  "require-dev": {
+    "mockery/mockery": "^1.6",
+    "phpunit/phpunit": "^10.0|^11.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Imrjat\\SSExpert\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Imrjat\\SSExpert\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Imrjat\\SSExpert\\SSExpertServiceProvider"
+      ],
+      "aliases": {
+        "SSExpertTemplate": "Imrjat\\SSExpert\\Facades\\SSExpertTemplate"
+      }
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
